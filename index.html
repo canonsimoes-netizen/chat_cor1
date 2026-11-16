@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Sala</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sala">
+<meta name="theme-color" content="#1c1c1e">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1117; --surface:#1a1d27; --surface2:#232736; --border:#2d3245;
+  --text:#e6e8ef; --muted:#8b91a7;
+  --blue:#4f8ef7; --green:#34c77b; --orange:#f59e42; --red:#ef5b5b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%}
+body{position:fixed;top:0;left:0;right:0}
+body.kb{padding-bottom:0 !important}
+body{background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);overflow:hidden}
+button,input,textarea{font:inherit;color:inherit}
+input,textarea{font-size:16px} /* evita o zoom automático do iOS ao escrever */
+html{background:var(--bg);overscroll-behavior:none}
+body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.top,.comp,.btn,.ib{-webkit-user-select:none;user-select:none}
+button{cursor:pointer}
+.screen{display:none;height:100%;flex-direction:column}
+.screen.on{display:flex}
+
+/* ---------- cartões / formulários ---------- */
+.wrap{width:100%;max-width:520px;margin:0 auto;padding:24px 18px;overflow-y:auto;flex:1}
+h1{font-size:22px;margin-bottom:4px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 8px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:6px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=password],textarea.f{width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;outline:none}
+input:focus,textarea:focus{border-color:var(--blue)}
+.btn{background:var(--blue);border:0;border-radius:10px;padding:10px 16px;font-weight:600;color:#fff}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn.green{background:var(--green);color:#06210f}
+.btn:disabled{opacity:.5;cursor:default}
+.row2{display:flex;gap:8px;margin-top:10px}
+.row2>input{flex:1}
+pre{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:12px;
+  overflow:auto;max-height:240px;white-space:pre;color:#b9c2dc}
+.colors{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid transparent}
+.dot.sel{border-color:#fff}
+.rooms .it{display:flex;justify-content:space-between;align-items:center;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
+.rooms .it small{color:var(--muted)}
+.link{background:none;border:0;color:var(--blue);font-size:13px;padding:6px 0}
+
+/* ---------- chat ---------- */
+.top{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--border)}
+.top .t{flex:1;min-width:0}
+.top .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .t small{color:var(--muted);font-size:12px}
+.ib{background:var(--surface2);border:1px solid var(--border);border-radius:10px;width:38px;height:38px;font-size:16px}
+.st{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--orange);margin-right:6px}
+.st.ok{background:var(--green)} .st.bad{background:var(--red)}
+#list{flex:1;overflow-y:auto;padding:12px 12px 4px;position:relative;overscroll-behavior:contain}
+#more{display:block;margin:0 auto 10px}
+.day{text-align:center;color:var(--muted);font-size:12px;margin:14px 0 8px}
+.row{display:flex;margin-top:8px}
+.row.grouped{margin-top:2px}
+.row.mine{justify-content:flex-end}
+.bubble{max-width:80%;background:var(--surface2);border-radius:14px;padding:7px 11px 6px}
+.row.mine .bubble{background:#25427a}
+.nick{font-size:12px;font-weight:700;margin-bottom:1px}
+.body{white-space:pre-wrap;word-break:break-word}
+.time{display:block;text-align:right;font-size:10px;color:var(--muted);margin-top:2px}
+#newpill{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;background:var(--blue);color:#fff;border:0;
+  border-radius:20px;padding:6px 14px;font-size:13px;display:none;position:sticky;margin:0 auto}
+.comp{display:flex;gap:8px;padding:10px 12px;background:var(--surface);border-top:1px solid var(--border);align-items:flex-end}
+.comp textarea{flex:1;resize:none;background:var(--bg);border:1px solid var(--border);border-radius:18px;
+  padding:9px 14px;outline:none;max-height:120px}
+.comp .btn{border-radius:50%;width:42px;height:42px;padding:0;font-size:18px}
+
+/* painel de teste */
+#tools{display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:12px}
+#tools.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center}
+.stat b{display:block;font-size:17px} .stat small{color:var(--muted);font-size:11px}
+.bar{height:6px;background:var(--bg);border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .15s}
+
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);
+  padding:10px 16px;border-radius:10px;font-size:14px;display:none;max-width:90%;z-index:9;text-align:center}
+
+/* ---- tema: grafite (sóbrio) ---- */
+:root{--bg:#1c1c1e;--surface:#242426;--surface2:#2c2c2e;--border:#3a3a3c;--text:#f2f2f7;--muted:#98989d;--blue:#f2f2f7;--green:#30d158}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px}
+input,textarea{font-size:16px;font-family:inherit}
+.btn{background:#f2f2f7;color:#1c1c1e;font-weight:500}
+.btn.green{background:#f2f2f7;color:#1c1c1e}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn:disabled{opacity:.5}
+.bubble{border-radius:12px;background:var(--surface2)}
+.row.mine .bubble{background:#f2f2f7;color:#1c1c1e}
+.row.mine .time{color:#636366}
+.nick{color:var(--muted) !important;font-weight:500}
+.colors{display:none}
+.dot.sel{border-color:var(--text)}
+#newpill{background:#f2f2f7;color:#1c1c1e}
+.bar i{background:#f2f2f7}
+#invite{border-color:var(--border) !important}
+</style>
+</head>
+<body>
+
+<!-- ============ CONFIGURAÇÃO ============ -->
+<section id="s-setup" class="screen">
+  <div class="wrap">
+    <h1>⚙️ Ligar ao Supabase</h1>
+    <p class="sub">Faz isto uma vez. A chave "anon" é pública por desenho — não uses a "service_role".</p>
+
+    <h2>1 · Cria o projeto</h2>
+    <div class="card sub">supabase.com → New project → Settings → API. Copia o <b>Project URL</b> e a chave <b>anon public</b>.</div>
+
+    <h2>2 · Corre este SQL (SQL Editor)</h2>
+    <pre id="sql"></pre>
+    <div class="row2"><button class="btn ghost" id="copysql">Copiar SQL</button></div>
+
+    <h2>3 · Cola as credenciais</h2>
+    <div class="card">
+      <label>Project URL</label>
+      <input type="text" id="cfgUrl" placeholder="https://xxxx.supabase.co" autocomplete="off">
+      <label>Anon key</label>
+      <input type="password" id="cfgKey" placeholder="eyJhbGciOi…" autocomplete="off">
+      <div class="row2"><button class="btn green" id="cfgSave">Guardar e continuar</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section id="s-lobby" class="screen">
+  <div class="wrap">
+    <h1>💬 Sala</h1>
+    <p class="sub">Chat de grupo com link de convite. Sem registos — só um nome.</p>
+
+    <h2>O teu nome</h2>
+    <div class="card">
+      <input type="text" id="nick" maxlength="24" placeholder="Ex.: Meee" autocomplete="off">
+      <div class="colors" id="colors"></div>
+    </div>
+
+    <div id="invite" class="card" style="display:none;border-color:var(--green);margin-top:16px">
+      <b id="invTitle">Foste convidado para uma sala</b>
+      <p class="sub" id="invSub" style="margin-top:4px">Escreve o teu nome acima e toca no botão.</p>
+      <button class="btn green" id="invGo" style="width:100%;margin-top:10px">Entrar na sala</button>
+    </div>
+
+    <div id="others">
+    <h2>Criar sala</h2>
+    <div class="card">
+      <div class="row2" style="margin-top:0">
+        <input type="text" id="roomName" maxlength="40" placeholder="Ex.: Família 👨‍👩‍👧">
+        <button class="btn" id="createRoom">Criar</button>
+      </div>
+    </div>
+
+    <h2>Entrar com código</h2>
+    <div class="card">
+      <div class="row2" style="margin-top:0">
+        <input type="text" id="joinCode" placeholder="Código da sala" autocomplete="off">
+        <button class="btn ghost" id="joinBtn">Entrar</button>
+      </div>
+    </div>
+
+    <h2>As tuas salas</h2>
+    <div class="rooms" id="recent"></div>
+    </div>
+
+    <button class="link" id="openSetup">⚙ Alterar configuração do Supabase</button>
+    <p class="sub" style="margin-top:14px;opacity:.6">versão 7 · grafite</p>
+  </div>
+</section>
+
+<!-- ============ CHAT ============ -->
+<section id="s-chat" class="screen">
+  <div class="top">
+    <button class="ib" id="back" title="Voltar">←</button>
+    <div class="t"><b id="rTitle"></b><small><span class="st" id="st"></span><span id="online">—</span></small></div>
+    <button class="ib" id="toolsBtn" title="Testes">🧪</button>
+    <button class="ib" id="share" title="Partilhar convite">🔗</button>
+    <button class="ib" id="menuBtn" title="Mais">⋯</button>
+  </div>
+  <div id="menu" style="display:none;position:absolute;right:12px;top:calc(58px + env(safe-area-inset-top));background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px;z-index:8;min-width:200px">
+    <button class="link" id="mLeave" style="display:block;width:100%;text-align:left;padding:10px;color:var(--text);font-size:15px">🚪 Sair da sala</button>
+    <button class="link" id="mDelete" style="display:none;width:100%;text-align:left;padding:10px;color:var(--red);font-size:15px">🗑 Apagar sala</button>
+  </div>
+
+  <div id="tools">
+    <div class="stats">
+      <div class="stat"><b id="sTotal">—</b><small>mensagens na sala</small></div>
+      <div class="stat"><b id="sLat">—</b><small>último envio (ms)</small></div>
+      <div class="stat"><b id="sRt">—</b><small>realtime</small></div>
+    </div>
+    <div class="row2" style="margin-top:0;flex-wrap:wrap">
+      <button class="btn ghost" data-bulk="100">+100 teste</button>
+      <button class="btn ghost" data-bulk="1000">+1 000 teste</button>
+      <button class="btn ghost" data-bulk="5000">+5 000 teste</button>
+    </div>
+    <div class="bar"><i id="bulkBar"></i></div>
+    <p class="sub" id="bulkInfo" style="margin-top:6px"></p>
+  </div>
+
+  <div id="list">
+    <button class="btn ghost" id="more" style="display:none">Carregar mais antigas</button>
+    <div id="msgs"></div>
+    <button id="newpill">↓ Novas mensagens</button>
+  </div>
+
+  <div class="comp">
+    <textarea id="input" rows="1" placeholder="Escreve uma mensagem…"></textarea>
+    <button class="btn" id="send" title="Enviar">➤</button>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+/* ================= CONFIG ================= */
+// Opcional: se hospedares o ficheiro, podes fixar aqui as credenciais
+// e os convites ficam mais curtos. (A anon key é pública por desenho.)
+const BAKED = { url: '', key: '' };
+
+const PAGE = 50;
+const COLORS = ['#4f8ef7','#34c77b','#f59e42','#ef5b5b','#b07cf7','#2ec4c4','#f27ab0'];
+
+const SQL = `-- Salas
+create table if not exists rooms (
+  id         uuid primary key default gen_random_uuid(),
+  code       text unique not null,
+  name       text not null,
+  owner_id   text,
+  created_at timestamptz not null default now()
+);
+
+-- Mensagens
+create table if not exists messages (
+  id         bigint generated always as identity primary key,
+  room_id    uuid not null references rooms(id) on delete cascade,
+  user_id    text not null,
+  nick       text not null,
+  color      text not null default '#4f8ef7',
+  body       text not null check (char_length(body) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+-- Índice essencial para milhões de mensagens (paginação rápida por sala)
+create index if not exists messages_room_id_idx on messages (room_id, id desc);
+
+-- Segurança (modo teste: qualquer pessoa com a anon key lê/escreve)
+alter table rooms    enable row level security;
+alter table messages enable row level security;
+
+create policy "rooms_select" on rooms    for select to anon using (true);
+create policy "rooms_insert" on rooms    for insert to anon with check (true);
+create policy "msgs_select"  on messages for select to anon using (true);
+create policy "msgs_insert"  on messages for insert to anon with check (true);
+create policy "rooms_delete" on rooms    for delete to anon using (true);
+
+-- Realtime
+alter publication supabase_realtime add table messages;`;
+
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+const fmtTime = d => new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+function fmtDay(d) {
+  const x = new Date(d), t = new Date(), y = new Date(); y.setDate(t.getDate() - 1);
+  if (sameDay(x, t)) return 'Hoje';
+  if (sameDay(x, y)) return 'Ontem';
+  return x.toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function genCode(len = 10) {
+  const abc = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const a = new Uint32Array(len); crypto.getRandomValues(a);
+  return Array.from(a, n => abc[n % abc.length]).join('');
+}
+let toastT;
+function toast(msg, ms = 3200) {
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastT); toastT = setTimeout(() => t.style.display = 'none', ms);
+}
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  $('#' + id).classList.add('on');
+}
+function errMsg(e) {
+  const m = (e && e.message) || String(e);
+  if (e && (e.code === '42P01' || /schema cache|does not exist/i.test(m))) return 'As tabelas não existem — corre o SQL na configuração.';
+  if (/Invalid API key|JWT/i.test(m)) return 'Chave inválida — confirma a anon key.';
+  if (/Failed to fetch|NetworkError/i.test(m)) return 'Sem ligação ao Supabase — confirma o URL.';
+  return m;
+}
+
+/* ================= ESTADO ================= */
+const state = {
+  sb: null, cfg: null,
+  user: LS.get('user', null),
+  room: null, msgs: [], ids: new Set(),
+  oldest: null, hasMore: false, total: 0,
+  channel: null, rt: '—', latency: null, pendingCode: null
+};
+
+/* ================= LIGAÇÃO ================= */
+function connect(cfg) {
+  state.cfg = cfg;
+  state.sb = supabase.createClient(cfg.url, cfg.key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { params: { eventsPerSecond: 10 } }
+  });
+}
+
+/* ================= SETUP ================= */
+$('#sql').textContent = SQL;
+$('#copysql').onclick = async () => {
+  try { await navigator.clipboard.writeText(SQL); toast('SQL copiado ✓'); }
+  catch { toast('Não consegui copiar — seleciona o texto à mão'); }
+};
+$('#cfgSave').onclick = () => {
+  const url = $('#cfgUrl').value.trim().replace(/\/+$/, '');
+  const key = $('#cfgKey').value.trim();
+  if (!/^https:\/\/.+\.supabase\.(co|in)$/i.test(url)) return toast('URL inválido (https://xxxx.supabase.co)');
+  if (key.length < 30) return toast('Chave anon inválida');
+  LS.set('cfg', { url, key });
+  connect({ url, key });
+  goLobbyOrJoin();
+};
+$('#openSetup').onclick = () => {
+  const c = state.cfg || {};
+  $('#cfgUrl').value = c.url || ''; $('#cfgKey').value = c.key || '';
+  show('s-setup');
+};
+
+/* ================= LOBBY ================= */
+function renderColors() {
+  const box = $('#colors'); box.innerHTML = '';
+  const cur = (state.user && state.user.color) || COLORS[0];
+  COLORS.forEach(c => {
+    const d = el('button', 'dot' + (c === cur ? ' sel' : '')); d.style.background = c;
+    d.onclick = () => { saveUser({ color: c }); renderColors(); };
+    box.appendChild(d);
+  });
+}
+function saveUser(patch) {
+  state.user = Object.assign({ id: uid(), nick: '', color: COLORS[0] }, state.user, patch);
+  LS.set('user', state.user);
+}
+function ensureNick() {
+  const n = $('#nick').value.trim();
+  if (!n) { toast('Escolhe primeiro um nome'); $('#nick').focus(); return false; }
+  saveUser({ nick: n });
+  return true;
+}
+function renderRecent() {
+  const box = $('#recent'); box.innerHTML = '';
+  const list = LS.get('rooms', []);
+  if (!list.length) { box.appendChild(el('p', 'sub', 'Ainda não entraste em nenhuma sala.')); return; }
+  list.forEach(r => {
+    const it = el('div', 'it');
+    const l = el('div'); l.appendChild(el('b', '', r.name)); l.appendChild(document.createElement('br')); l.appendChild(el('small', '', r.code));
+    it.appendChild(l);
+    const x = el('button', 'ib', '✕'); x.style.cssText = 'width:34px;height:34px;color:var(--muted)'; x.title = 'Tirar da lista';
+    x.onclick = ev => {
+      ev.stopPropagation();
+      if (!confirm('Tirar "' + r.name + '" da tua lista?\n(A sala continua a existir; podes voltar a entrar pelo link.)')) return;
+      LS.set('rooms', LS.get('rooms', []).filter(z => z.code !== r.code));
+      renderRecent();
+    };
+    it.appendChild(x);
+    it.onclick = () => { if (ensureNick()) joinRoom(r.code); };
+    box.appendChild(it);
+  });
+}
+function rememberRoom(r) {
+  const list = LS.get('rooms', []).filter(x => x.code !== r.code);
+  list.unshift({ code: r.code, name: r.name });
+  LS.set('rooms', list.slice(0, 20));
+}
+function goLobby() {
+  $('#nick').value = (state.user && state.user.nick) || '';
+  renderColors(); renderRecent(); show('s-lobby');
+  showInvite();
+}
+async function showInvite() {
+  const code = state.pendingCode;
+  $('#invite').style.display = code ? 'block' : 'none';
+  $('#others').style.display = code ? 'none' : '';
+  if (!code) return;
+  try {
+    const { data } = await state.sb.from('rooms').select('name').eq('code', code).maybeSingle();
+    $('#invTitle').textContent = data ? 'Convite para "' + data.name + '"' : 'Convite inválido ou sala inexistente';
+  } catch {}
+}
+$('#invGo').onclick = () => {
+  if (!ensureNick()) return;
+  const c = state.pendingCode; state.pendingCode = null; joinRoom(c);
+};
+function goLobbyOrJoin() {
+  if (state.pendingCode && state.user && state.user.nick) {
+    const c = state.pendingCode; state.pendingCode = null; joinRoom(c);
+  } else goLobby();
+}
+
+$('#nick').addEventListener('input', () => {
+  const n = $('#nick').value.trim(); if (n) saveUser({ nick: n });
+});
+$('#createRoom').onclick = async () => {
+  if (!ensureNick()) return;
+  const name = $('#roomName').value.trim() || 'Nova sala';
+  const btn = $('#createRoom'); btn.disabled = true;
+  try {
+    const { data, error } = await state.sb.from('rooms').insert({ code: genCode(), name, owner_id: state.user.id }).select().single();
+    if (error) throw error;
+    $('#roomName').value = '';
+    openRoom(data);
+  } catch (e) { toast(errMsg(e)); }
+  btn.disabled = false;
+};
+$('#joinBtn').onclick = () => {
+  if (!ensureNick()) return;
+  const c = $('#joinCode').value.trim().toLowerCase();
+  if (c) joinRoom(c);
+};
+
+async function joinRoom(code) {
+  try {
+    const { data, error } = await state.sb.from('rooms').select('*').eq('code', code).maybeSingle();
+    if (error) throw error;
+    if (!data) { toast('Sala não encontrada'); goLobby(); return; }
+    openRoom(data);
+  } catch (e) { toast(errMsg(e)); goLobby(); }
+}
+
+/* ================= SALA ================= */
+async function openRoom(room) {
+  closeChannel();
+  state.room = room; state.msgs = []; state.ids = new Set();
+  state.oldest = null; state.hasMore = false; state.total = 0; state.latency = null;
+  rememberRoom(room);
+  history.replaceState(null, '', '#sala=' + room.code);
+  $('#rTitle').textContent = room.name;
+  $('#online').textContent = '—';
+  $('#msgs').innerHTML = '';
+  $('#tools').classList.remove('on');
+  updateStats();
+  show('s-chat');
+  subscribe();
+  await loadPage(false);
+  scrollBottom(true);
+  refreshTotal();
+  $('#input').focus();
+}
+
+function closeChannel() {
+  if (state.channel) { state.sb.removeChannel(state.channel); state.channel = null; }
+}
+
+function subscribe() {
+  const ch = state.sb.channel('sala:' + state.room.code, { config: { presence: { key: state.user.id } } });
+  ch.on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: 'room_id=eq.' + state.room.id },
+      p => addMsg(p.new))
+    .on('presence', { event: 'sync' }, () => {
+      const n = Object.keys(ch.presenceState()).length;
+      $('#online').textContent = n + (n === 1 ? ' pessoa online' : ' pessoas online');
+    })
+    .subscribe(async status => {
+      state.rt = status === 'SUBSCRIBED' ? 'ligado' : status === 'TIMED_OUT' ? 'timeout' : status === 'CLOSED' ? 'fechado' : status === 'CHANNEL_ERROR' ? 'erro' : '…';
+      const st = $('#st');
+      st.className = 'st' + (status === 'SUBSCRIBED' ? ' ok' : (status === 'CHANNEL_ERROR' || status === 'CLOSED') ? ' bad' : '');
+      updateStats();
+      if (status === 'SUBSCRIBED') await ch.track({ nick: state.user.nick });
+    });
+  state.channel = ch;
+}
+
+async function loadPage(older) {
+  const list = $('#list');
+  let q = state.sb.from('messages').select('*').eq('room_id', state.room.id).order('id', { ascending: false }).limit(PAGE);
+  if (older && state.oldest) q = q.lt('id', state.oldest);
+  const { data, error } = await q;
+  if (error) { toast(errMsg(error)); return; }
+  const page = data.slice().reverse().filter(m => !state.ids.has(m.id));
+  page.forEach(m => state.ids.add(m.id));
+  state.msgs = older ? page.concat(state.msgs) : page.concat(state.msgs);
+  state.msgs.sort((a, b) => a.id - b.id);
+  if (data.length) state.oldest = Math.min(...state.msgs.map(m => m.id));
+  state.hasMore = data.length === PAGE;
+  const prevH = list.scrollHeight, prevT = list.scrollTop;
+  renderAll();
+  if (older) list.scrollTop = prevT + (list.scrollHeight - prevH);
+}
+$('#more').onclick = async () => { $('#more').disabled = true; await loadPage(true); $('#more').disabled = false; };
+
+/* ---- renderização ---- */
+function makeNode(m, prev) {
+  const frag = document.createDocumentFragment();
+  const newDay = !prev || !sameDay(prev.created_at, m.created_at);
+  if (newDay) frag.appendChild(el('div', 'day', fmtDay(m.created_at)));
+  const mine = m.user_id === state.user.id;
+  const grouped = !newDay && prev && prev.user_id === m.user_id &&
+    (new Date(m.created_at) - new Date(prev.created_at)) < 5 * 60000;
+  const row = el('div', 'row' + (mine ? ' mine' : '') + (grouped ? ' grouped' : ''));
+  const b = el('div', 'bubble');
+  if (!mine && !grouped) { const n = el('div', 'nick', m.nick); n.style.color = m.color; b.appendChild(n); }
+  b.appendChild(el('div', 'body', m.body));
+  b.appendChild(el('span', 'time', fmtTime(m.created_at)));
+  row.appendChild(b); frag.appendChild(row);
+  return frag;
+}
+function renderAll() {
+  const box = $('#msgs'); box.innerHTML = '';
+  state.msgs.forEach((m, i) => box.appendChild(makeNode(m, state.msgs[i - 1])));
+  $('#more').style.display = state.hasMore ? 'block' : 'none';
+}
+const nearBottom = () => { const l = $('#list'); return l.scrollHeight - l.scrollTop - l.clientHeight < 140; };
+function scrollBottom(force) {
+  const l = $('#list');
+  if (force || nearBottom()) { l.scrollTop = l.scrollHeight; $('#newpill').style.display = 'none'; }
+}
+$('#list').addEventListener('scroll', () => { if (nearBottom()) $('#newpill').style.display = 'none'; });
+$('#newpill').onclick = () => scrollBottom(true);
+
+function addMsg(m) {
+  if (state.ids.has(m.id)) return;
+  const wasNear = nearBottom();
+  state.ids.add(m.id); state.total++;
+  const last = state.msgs[state.msgs.length - 1];
+  state.msgs.push(m);
+  if (last && last.id > m.id) { state.msgs.sort((a, b) => a.id - b.id); renderAll(); }
+  else $('#msgs').appendChild(makeNode(m, last));
+  updateStats();
+  if (m.user_id === state.user.id || wasNear) scrollBottom(true);
+  else $('#newpill').style.display = 'block';
+}
+
+/* ---- enviar ---- */
+const input = $('#input');
+function autosize() { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; }
+input.addEventListener('input', autosize);
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+});
+$('#send').onclick = send;
+
+async function send() {
+  const body = input.value.trim();
+  if (!body || !state.room) return;
+  input.value = ''; autosize();
+  const t0 = performance.now();
+  const { data, error } = await state.sb.from('messages').insert({
+    room_id: state.room.id, user_id: state.user.id, nick: state.user.nick, color: state.user.color, body
+  }).select().single();
+  if (error) { toast(errMsg(error)); input.value = body; autosize(); return; }
+  state.latency = Math.round(performance.now() - t0);
+  addMsg(data);
+}
+
+/* ---- estatísticas / testes ---- */
+async function refreshTotal() {
+  const { count } = await state.sb.from('messages').select('id', { count: 'exact', head: true }).eq('room_id', state.room.id);
+  if (typeof count === 'number') { state.total = count; updateStats(); }
+}
+function updateStats() {
+  $('#sTotal').textContent = state.room ? state.total.toLocaleString('pt-PT') : '—';
+  $('#sLat').textContent = state.latency == null ? '—' : state.latency;
+  $('#sRt').textContent = state.rt;
+}
+$('#toolsBtn').onclick = () => $('#tools').classList.toggle('on');
+
+const LOREM = ['Bom dia a todos!','Alguém viu o jogo ontem?','Já chegaste a casa?','Mandei as fotos no grupo 📸','Vamos jantar sábado?',
+  'Hahaha não acredito','Ok, combinado 👍','Quem leva a sobremesa?','A que horas é o almoço?','Parabéns!! 🎉','Estou a caminho','Liga-me quando puderes'];
+let bulkBusy = false;
+document.querySelectorAll('[data-bulk]').forEach(b => b.onclick = () => bulk(+b.dataset.bulk));
+async function bulk(n) {
+  if (bulkBusy || !state.room) return;
+  bulkBusy = true;
+  const bar = $('#bulkBar'), info = $('#bulkInfo');
+  const t0 = performance.now(); let done = 0;
+  try {
+    while (done < n) {
+      const size = Math.min(500, n - done);
+      const rows = Array.from({ length: size }, (_, i) => ({
+        room_id: state.room.id, user_id: 'bot', nick: '🤖 Teste', color: '#8b91a7',
+        body: LOREM[(done + i) % LOREM.length] + ' #' + (done + i + 1)
+      }));
+      const { error } = await state.sb.from('messages').insert(rows);
+      if (error) throw error;
+      done += size;
+      bar.style.width = (done / n * 100) + '%';
+      info.textContent = done.toLocaleString('pt-PT') + ' / ' + n.toLocaleString('pt-PT') + ' inseridas…';
+    }
+    const s = ((performance.now() - t0) / 1000).toFixed(1);
+    info.textContent = n.toLocaleString('pt-PT') + ' mensagens em ' + s + 's (' + Math.round(n / s) + '/s)';
+  } catch (e) { info.textContent = 'Erro: ' + errMsg(e); }
+  bulkBusy = false;
+  setTimeout(() => bar.style.width = '0', 1200);
+  await refreshTotal();
+}
+
+/* ---- partilhar ---- */
+$('#share').onclick = async () => {
+  const c = state.cfg;
+  const base = location.href.split('#')[0];
+  let hash = 'sala=' + state.room.code;
+  if (!(BAKED.url && BAKED.key)) hash += '&c=' + encodeURIComponent(btoa(JSON.stringify({ u: c.url, k: c.key })));
+  const link = base + '#' + hash;
+  if (location.protocol === 'file:') toast('Atenção: o ficheiro está local — hospeda-o (Netlify, GitHub Pages…) para o link funcionar para os outros', 6000);
+  const canNativeShare = navigator.share && location.protocol === 'https:' && window.isSecureContext &&
+    matchMedia('(pointer: coarse)').matches;
+  if (canNativeShare) { try { await navigator.share({ title: state.room.name, text: 'Entra na sala "' + state.room.name + '"', url: link }); return; } catch {} }
+  try { await navigator.clipboard.writeText(link); if (location.protocol !== 'file:') toast('Link de convite copiado ✓'); }
+  catch { prompt('Copia o link de convite:', link); }
+};
+
+/* ---- menu: sair / apagar ---- */
+const menu = $('#menu');
+$('#menuBtn').onclick = ev => {
+  ev.stopPropagation();
+  const isOwner = state.room && state.room.owner_id && state.room.owner_id === state.user.id;
+  $('#mDelete').style.display = isOwner ? 'block' : 'none';
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', () => { menu.style.display = 'none'; });
+
+function leaveToLobby() {
+  closeChannel(); state.room = null;
+  history.replaceState(null, '', location.pathname + location.search);
+  goLobby();
+}
+$('#mLeave').onclick = () => {
+  if (!confirm('Sair da sala "' + state.room.name + '"?\n(A sala continua a existir; podes voltar a entrar pelo link.)')) return;
+  LS.set('rooms', LS.get('rooms', []).filter(r => r.code !== state.room.code));
+  leaveToLobby();
+};
+$('#mDelete').onclick = async () => {
+  const r = state.room;
+  if (!confirm('APAGAR a sala "' + r.name + '" para TODOS?\nIsto apaga também todas as mensagens e não dá para desfazer.')) return;
+  const { data, error } = await state.sb.from('rooms').delete().eq('id', r.id).select();
+  if (error) return toast(errMsg(error));
+  if (!data || !data.length) return toast('Não foi possível apagar — corre o SQL de atualização no Supabase (política de apagar).', 6000);
+  LS.set('rooms', LS.get('rooms', []).filter(x => x.code !== r.code));
+  toast('Sala apagada');
+  leaveToLobby();
+};
+
+$('#back').onclick = () => {
+  closeChannel(); state.room = null;
+  history.replaceState(null, '', location.pathname + location.search);
+  goLobby();
+};
+
+/* ================= TECLADO (iOS) ================= */
+// Mantém a app encaixada na área visível quando o teclado abre,
+// em vez de a página dar zoom/saltar.
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const fit = () => {
+    document.body.style.height = vv.height + 'px';
+    document.body.style.top = vv.offsetTop + 'px';
+    document.body.classList.toggle('kb', vv.height < window.innerHeight * 0.8);
+    if (state.room && nearBottomSoon) scrollBottom(true);
+  };
+  let nearBottomSoon = false;
+  $('#input').addEventListener('focus', () => { nearBottomSoon = true; setTimeout(() => { fit(); window.scrollTo(0, 0); }, 300); });
+  $('#input').addEventListener('blur', () => { nearBottomSoon = false; setTimeout(() => { fit(); window.scrollTo(0, 0); }, 100); });
+  vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+  fit();
+}
+
+/* ================= ARRANQUE ================= */
+function boot() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  if (p.get('c')) {
+    try { const c = JSON.parse(atob(p.get('c'))); if (c.u && c.k) LS.set('cfg', { url: c.u, key: c.k }); } catch {}
+  }
+  const cfg = (BAKED.url && BAKED.key) ? BAKED : LS.get('cfg', null);
+  state.pendingCode = (p.get('sala') || '').toLowerCase() || null;
+  if (!cfg) { show('s-setup'); return; }
+  connect(cfg);
+  if (state.pendingCode && !(state.user && state.user.nick)) {
+    goLobby();
+  } else goLobbyOrJoin();
+}
+if (!window.supabase) { document.body.innerHTML = '<p style="padding:24px">Não consegui carregar a biblioteca do Supabase. Verifica a ligação à internet.</p>'; }
+else boot();
+
+})();
+</script>
+</body>
+</html>
